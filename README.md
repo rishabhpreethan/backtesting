@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Binance Candlestick Backtesting App
+
+A Next.js application for backtesting trading strategies using historical candlestick data from Binance.
+
+## Features
+
+- Fetch historical candlestick data from Binance API
+- Implement technical indicators (SMA, EMA, RSI)
+- Define rules-based trading strategies
+- Backtest strategies with proper trade tracking
+- Visualize results with candlestick charts and position boxes
+- View trade metrics and equity curves
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ and npm
+- Binance API key (optional, but recommended)
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create a `.env.local` file with your Binance API credentials:
+
+```
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_api_secret_here
+BINANCE_BASE_URL=https://api.binance.com
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Enter a symbol (e.g., BTCUSDT)
+2. Select a timeframe (1m, 5m, 15m, 1h, 4h, 1d)
+3. Choose a date range
+4. Click "Run Backtest"
+5. View results including:
+   - Trade metrics (win rate, P&L, etc.)
+   - Candlestick chart with position boxes
+   - Hover over position boxes to see detailed trade information
+   - Equity curve showing account balance over time
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+- `/lib/types`: TypeScript interfaces for the entire system
+- `/lib/services/candleService.ts`: Binance API integration with pagination
+- `/lib/services/indicatorEngine.ts`: Technical indicator calculations
+- `/lib/services/strategyEngine.ts`: Rules-based strategy evaluation
+- `/lib/services/backtestEngine.ts`: Core backtesting logic
+- `/app/api/backtest/route.ts`: API endpoint for running backtests
+- `/components`: React UI components including charts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Default Strategy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The default strategy uses:
+- Entry: SMA(20) > SMA(50)
+- Exit: RSI(14) >= 70
+- Risk management: 2% stop loss, 4% take profit
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
