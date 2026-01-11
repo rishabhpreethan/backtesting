@@ -24,7 +24,7 @@ export type RawKline = [
 ];
 
 // Indicator types
-export type IndicatorType = 'SMA' | 'EMA' | 'RSI';
+export type IndicatorType = 'SMA' | 'EMA' | 'RSI' | 'MACD';
 
 export interface IndicatorValue {
   time: number;

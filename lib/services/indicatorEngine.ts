@@ -4,6 +4,53 @@ function seriesFrom(candles: Candle[], field: keyof Candle): number[] {
   return candles.map((c) => Number(c[field]));
 }
 
+// Stream MACD calculator to avoid double-null handling
+function macd(values: number[], fast: number, slow: number, signal: number) {
+  const macdLine: (number | null)[] = new Array(values.length).fill(null);
+  const signalLine: (number | null)[] = new Array(values.length).fill(null);
+  const histLine: (number | null)[] = new Array(values.length).fill(null);
+
+  const kFast = 2 / (fast + 1);
+  const kSlow = 2 / (slow + 1);
+  const kSignal = 2 / (signal + 1);
+
+  let emaFast: number | null = null;
+  let emaSlow: number | null = null;
+  let emaSignal: number | null = null;
+
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i];
+
+    // EMA fast
+    if (emaFast == null) emaFast = v; else emaFast = v * kFast + emaFast * (1 - kFast);
+    // EMA slow
+    if (emaSlow == null) emaSlow = v; else emaSlow = v * kSlow + emaSlow * (1 - kSlow);
+
+    // Warmup conditions: expose macd only after both EMAs have sufficient bars
+    const minWarmup = Math.max(fast, slow) - 1;
+    if (i >= minWarmup) {
+      const macdVal = emaFast - emaSlow;
+      macdLine[i] = macdVal;
+
+      // Signal EMA on macd
+      if (emaSignal == null) {
+        // initialize when first macd value appears
+        emaSignal = macdVal;
+      } else {
+        emaSignal = macdVal * kSignal + emaSignal * (1 - kSignal);
+      }
+
+      // Expose signal after warmup
+      if (i >= minWarmup + signal - 1) {
+        signalLine[i] = emaSignal;
+        histLine[i] = macdVal - emaSignal;
+      }
+    }
+  }
+
+  return { macdLine, signalLine, histLine };
+}
+
 function sma(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = new Array(values.length).fill(null);
   let sum = 0;
@@ -102,6 +149,15 @@ export function buildIndicators(
     } else if (type === 'RSI') {
       const period = Number(params.period ?? 14);
       values = rsi(close, period);
+    } else if (type === 'MACD') {
+      const fast = Number(params.fast ?? 12);
+      const slow = Number(params.slow ?? 26);
+      const signal = Number(params.signal ?? 9);
+      const component = String(params.component ?? 'line'); // 'line' | 'signal' | 'hist'
+      const { macdLine, signalLine, histLine } = macd(close, fast, slow, signal);
+      if (component === 'signal') values = signalLine;
+      else if (component === 'hist') values = histLine;
+      else values = macdLine;
     } else {
       throw new Error(`Unsupported indicator: ${type}`);
     }
